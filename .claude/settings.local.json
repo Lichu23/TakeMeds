@@ -6,7 +6,8 @@
       "Bash(npm create:*)",
       "Bash(npx tailwindcss:*)",
       "Bash(npm start)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

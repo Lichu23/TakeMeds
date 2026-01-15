@@ -25,9 +25,3 @@ export interface HistoryStats {
   }>;
 }
 
-export interface Settings {
-  notifications_enabled: string;
-  reminder_advance_minutes: string;
-  theme: string;
-  timezone: string;
-}
