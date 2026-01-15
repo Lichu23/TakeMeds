@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PillTime Icon Generator</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0284c7;
+        }
+        button {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0369a1;
+        }
+        #preview {
+            margin: 20px 0;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .icon-preview {
+            text-align: center;
+        }
+        .icon-preview canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .instructions {
+            background: #e0f2fe;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💊 PillTime Icon Generator</h1>
+        <p>Generate all required PWA icons for PillTime</p>
+
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Click "Generate All Icons" button below</li>
+                <li>Right-click each icon and "Save Image As..."</li>
+                <li>Save with the exact filename shown below each icon</li>
+                <li>Save all icons to: <code>client/public/icons/</code></li>
+            </ol>
+        </div>
+
+        <button onclick="generateAllIcons()">Generate All Icons</button>
+
+        <div id="preview"></div>
+    </div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+        function drawPillIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const center = size / 2;
+            const padding = size * 0.15;
+
+            // Background
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(0, 0, size, size);
+
+            // Pill capsule
+            const pillWidth = size * 0.5;
+            const pillHeight = size * 0.3;
+            const pillX = center - pillWidth / 2;
+            const pillY = center - pillHeight / 2;
+
+            // Left half (lighter)
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(pillX + pillHeight/2, center, pillHeight/2, Math.PI/2, -Math.PI/2);
+            ctx.lineTo(center, pillY);
+            ctx.lineTo(center, pillY + pillHeight);
+            ctx.closePath();
+            ctx.fill();
+
+            // Right half (darker)
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.arc(pillX + pillWidth - pillHeight/2, center, pillHeight/2, -Math.PI/2, Math.PI/2);
+            ctx.lineTo(center, pillY + pillHeight);
+            ctx.lineTo(center, pillY);
+            ctx.closePath();
+            ctx.fill();
+
+            // Center line
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = size * 0.02;
+            ctx.beginPath();
+            ctx.moveTo(center, pillY);
+            ctx.lineTo(center, pillY + pillHeight);
+            ctx.stroke();
+
+            // Small dots for detail
+            ctx.fillStyle = '#0284c7';
+            const dotRadius = size * 0.02;
+            const dotY = center - pillHeight * 0.15;
+            ctx.beginPath();
+            ctx.arc(center - pillWidth * 0.15, dotY, dotRadius, 0, Math.PI * 2);
+            ctx.arc(center + pillWidth * 0.15, dotY, dotRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawMaskableIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const center = size / 2;
+            const safeZone = size * 0.8; // 80% safe zone for maskable
+
+            // Background circle (safe zone)
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.arc(center, center, safeZone/2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pill capsule (smaller to fit safe zone)
+            const pillWidth = safeZone * 0.4;
+            const pillHeight = safeZone * 0.24;
+            const pillX = center - pillWidth / 2;
+            const pillY = center - pillHeight / 2;
+
+            // Left half
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(pillX + pillHeight/2, center, pillHeight/2, Math.PI/2, -Math.PI/2);
+            ctx.lineTo(center, pillY);
+            ctx.lineTo(center, pillY + pillHeight);
+            ctx.closePath();
+            ctx.fill();
+
+            // Right half
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.arc(pillX + pillWidth - pillHeight/2, center, pillHeight/2, -Math.PI/2, Math.PI/2);
+            ctx.lineTo(center, pillY + pillHeight);
+            ctx.lineTo(center, pillY);
+            ctx.closePath();
+            ctx.fill();
+
+            // Center line
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = size * 0.015;
+            ctx.beginPath();
+            ctx.moveTo(center, pillY);
+            ctx.lineTo(center, pillY + pillHeight);
+            ctx.stroke();
+        }
+
+        function generateAllIcons() {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+
+            // Generate regular icons
+            sizes.forEach(size => {
+                const container = document.createElement('div');
+                container.className = 'icon-preview';
+
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                drawPillIcon(canvas, size);
+
+                const filename = document.createElement('div');
+                filename.textContent = `icon-${size}x${size}.png`;
+                filename.style.marginTop = '10px';
+                filename.style.fontSize = '12px';
+                filename.style.fontWeight = 'bold';
+
+                container.appendChild(canvas);
+                container.appendChild(filename);
+                preview.appendChild(container);
+            });
+
+            // Generate maskable icons
+            [192, 512].forEach(size => {
+                const container = document.createElement('div');
+                container.className = 'icon-preview';
+
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                drawMaskableIcon(canvas, size);
+
+                const filename = document.createElement('div');
+                filename.textContent = `icon-${size}x${size}-maskable.png`;
+                filename.style.marginTop = '10px';
+                filename.style.fontSize = '12px';
+                filename.style.fontWeight = 'bold';
+                filename.style.color = '#16a34a';
+
+                container.appendChild(canvas);
+                container.appendChild(filename);
+                preview.appendChild(container);
+            });
+        }
+    </script>
+</body>
+</html>
