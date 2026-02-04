@@ -92,63 +92,67 @@ export function DailyTracker({ logs, onMarkAsTaken, onMarkAsSkipped }: DailyTrac
       {logs.map((log) => (
         <div
           key={log.id}
-          className={`card flex items-center justify-between ${
-            log.status === 'taken' ? 'bg-green-50 border-green-200' : ''
-          } ${log.status === 'missed' ? 'bg-red-50 border-red-200' : ''}`}
+          className={`card p-4 sm:p-6 ${
+            log.status === 'taken' ? 'bg-green-50 border border-green-200' : ''
+          } ${log.status === 'missed' ? 'bg-red-50 border border-red-200' : ''}`}
         >
-          {/* Left side - Med info */}
-          <div className="flex items-center space-x-4">
-            <div className="flex-shrink-0">{getStatusIcon(log.status)}</div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{log.medication_name}</h3>
-              {log.dosage && <p className="text-sm text-gray-600">{log.dosage}</p>}
-              <div className="flex items-center mt-1 space-x-3 text-sm text-gray-500">
-                <span className="flex items-center">
-                  <svg
-                    className="w-4 h-4 mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {format(new Date(log.scheduled_time), 'h:mm a')}
-                </span>
-                {log.taken_time && (
-                  <span className="text-green-600">
-                    Taken at {format(new Date(log.taken_time), 'h:mm a')}
+          {/* Mobile Layout: Stack vertically */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Med info */}
+            <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
+              <div className="flex-shrink-0 mt-0.5 sm:mt-0">{getStatusIcon(log.status)}</div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center flex-wrap gap-2">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                    {log.medication_name}
+                  </h3>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(log.status)}`}>
+                    {log.status}
                   </span>
-                )}
+                </div>
+                {log.dosage && <p className="text-sm text-gray-600 mt-0.5">{log.dosage}</p>}
+                <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1 text-sm text-gray-500">
+                  <span className="flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {format(new Date(log.scheduled_time), 'h:mm a')}
+                  </span>
+                  {log.taken_time && (
+                    <span className="text-green-600">
+                      Taken at {format(new Date(log.taken_time), 'h:mm a')}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right side - Actions */}
-          <div className="flex items-center space-x-2">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(log.status)}`}>
-              {log.status}
-            </span>
-
+            {/* Actions - Full width on mobile */}
             {log.status === 'pending' && (
-              <>
+              <div className="flex gap-2 sm:flex-shrink-0">
                 <button
                   onClick={() => onMarkAsTaken(log.id)}
-                  className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 sm:py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors"
                 >
-                  Mark as Taken
+                  Take
                 </button>
                 <button
                   onClick={() => onMarkAsSkipped(log.id)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 sm:py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 active:bg-gray-400 transition-colors"
                 >
                   Skip
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>
