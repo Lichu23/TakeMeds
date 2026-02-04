@@ -45,6 +45,71 @@ export function generateLogsForDate(date) {
   return logsCreated;
 }
 
+// Generate logs for a specific medication (used when creating/updating medications)
+export function generateLogsForMedication(medicationId) {
+  const med = db.prepare('SELECT * FROM medications WHERE id = ?').get(medicationId);
+
+  if (!med || !med.active) {
+    return 0;
+  }
+
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+  // Check if medication is valid for today or tomorrow
+  const startDate = med.start_date;
+  const endDate = med.end_date;
+
+  let logsCreated = 0;
+  const times = JSON.parse(med.times);
+
+  // Generate for today if applicable
+  if (startDate <= todayStr && (!endDate || endDate >= todayStr)) {
+    for (const time of times) {
+      const scheduledTime = `${todayStr} ${time}:00`;
+
+      const existing = db.prepare(`
+        SELECT id FROM medication_logs
+        WHERE medication_id = ? AND scheduled_time = ?
+      `).get(med.id, scheduledTime);
+
+      if (!existing) {
+        db.prepare(`
+          INSERT INTO medication_logs (medication_id, scheduled_time, status)
+          VALUES (?, ?, 'pending')
+        `).run(med.id, scheduledTime);
+        logsCreated++;
+      }
+    }
+  }
+
+  // Generate for tomorrow if applicable
+  if (startDate <= tomorrowStr && (!endDate || endDate >= tomorrowStr)) {
+    for (const time of times) {
+      const scheduledTime = `${tomorrowStr} ${time}:00`;
+
+      const existing = db.prepare(`
+        SELECT id FROM medication_logs
+        WHERE medication_id = ? AND scheduled_time = ?
+      `).get(med.id, scheduledTime);
+
+      if (!existing) {
+        db.prepare(`
+          INSERT INTO medication_logs (medication_id, scheduled_time, status)
+          VALUES (?, ?, 'pending')
+        `).run(med.id, scheduledTime);
+        logsCreated++;
+      }
+    }
+  }
+
+  console.log(`✓ Created ${logsCreated} logs for medication ${med.name}`);
+  return logsCreated;
+}
+
 // Mark past pending logs as missed
 export function markMissedLogs() {
   const now = new Date().toISOString();

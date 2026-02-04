@@ -1,5 +1,6 @@
 import express from 'express';
 import db from '../db/database.js';
+import { generateLogsForMedication } from '../services/schedulerService.js';
 
 const router = express.Router();
 
@@ -95,6 +96,9 @@ router.post('/', (req, res) => {
 
     const newMedication = db.prepare('SELECT * FROM medications WHERE id = ?').get(result.lastInsertRowid);
 
+    // Generate logs for today and tomorrow for this new medication
+    generateLogsForMedication(newMedication.id);
+
     res.status(201).json({
       success: true,
       message: 'Medication created successfully',
@@ -148,6 +152,11 @@ router.put('/:id', (req, res) => {
     );
 
     const updated = db.prepare('SELECT * FROM medications WHERE id = ?').get(id);
+
+    // Regenerate logs if times changed or medication was reactivated
+    if (times || active === true) {
+      generateLogsForMedication(updated.id);
+    }
 
     res.json({
       success: true,
