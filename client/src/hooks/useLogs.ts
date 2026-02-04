@@ -14,6 +14,7 @@ interface UseLogsReturn {
   todayStats: DailyStats | null;
   loading: boolean;
   error: string | null;
+  includesUpcoming: boolean;
   fetchTodayLogs: () => Promise<void>;
   markAsTaken: (logId: number, notes?: string) => Promise<boolean>;
   markAsSkipped: (logId: number, notes?: string) => Promise<boolean>;
@@ -25,6 +26,7 @@ export function useLogs(): UseLogsReturn {
   const [todayStats, setTodayStats] = useState<DailyStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [includesUpcoming, setIncludesUpcoming] = useState(false);
 
   // Fetch today's logs
   const fetchTodayLogs = useCallback(async () => {
@@ -34,6 +36,7 @@ export function useLogs(): UseLogsReturn {
       const response = await logsApi.getToday();
       setTodayLogs(response.logs);
       setTodayStats(response.stats);
+      setIncludesUpcoming(response.includesUpcoming || false);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch today\'s logs');
       console.error('Error fetching today\'s logs:', err);
@@ -132,6 +135,7 @@ export function useLogs(): UseLogsReturn {
     todayStats,
     loading,
     error,
+    includesUpcoming,
     fetchTodayLogs,
     markAsTaken,
     markAsSkipped,

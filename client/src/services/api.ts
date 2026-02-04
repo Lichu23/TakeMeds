@@ -113,6 +113,8 @@ export const logsApi = {
       pending: number;
       skipped: number;
     };
+    includesUpcoming?: boolean;
+    upcomingCount?: number;
   }> => api.get('/logs/today'),
 
   getHistory: (days?: number): Promise<{

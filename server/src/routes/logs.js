@@ -48,10 +48,11 @@ router.get('/', (req, res) => {
   }
 });
 
-// GET today's logs
+// GET today's logs (includes today + tomorrow's upcoming if today has few pending)
 router.get('/today', (req, res) => {
   try {
-    const logs = db.prepare(`
+    // Get today's logs
+    const todayLogs = db.prepare(`
       SELECT l.*, m.name as medication_name, m.dosage
       FROM medication_logs l
       JOIN medications m ON l.medication_id = m.id
@@ -59,19 +60,43 @@ router.get('/today', (req, res) => {
       ORDER BY l.scheduled_time ASC
     `).all();
 
-    // Calculate statistics
+    // Get tomorrow's logs (to show upcoming)
+    const tomorrowLogs = db.prepare(`
+      SELECT l.*, m.name as medication_name, m.dosage
+      FROM medication_logs l
+      JOIN medications m ON l.medication_id = m.id
+      WHERE date(l.scheduled_time) = date('now', '+1 day')
+      ORDER BY l.scheduled_time ASC
+    `).all();
+
+    // Check if there are pending medications for the rest of today
+    const pendingToday = todayLogs.filter(l => l.status === 'pending').length;
+
+    // If no pending for today, include tomorrow's logs
+    // This helps when user creates medication late at night
+    let logs = todayLogs;
+    let includesUpcoming = false;
+
+    if (pendingToday === 0 && tomorrowLogs.length > 0) {
+      logs = [...todayLogs, ...tomorrowLogs];
+      includesUpcoming = true;
+    }
+
+    // Calculate statistics (only for today)
     const stats = {
-      total: logs.length,
-      taken: logs.filter(l => l.status === 'taken').length,
-      missed: logs.filter(l => l.status === 'missed').length,
-      pending: logs.filter(l => l.status === 'pending').length,
-      skipped: logs.filter(l => l.status === 'skipped').length
+      total: todayLogs.length,
+      taken: todayLogs.filter(l => l.status === 'taken').length,
+      missed: todayLogs.filter(l => l.status === 'missed').length,
+      pending: todayLogs.filter(l => l.status === 'pending').length,
+      skipped: todayLogs.filter(l => l.status === 'skipped').length
     };
 
     res.json({
       success: true,
       logs,
-      stats
+      stats,
+      includesUpcoming,
+      upcomingCount: includesUpcoming ? tomorrowLogs.length : 0
     });
   } catch (error) {
     res.status(500).json({

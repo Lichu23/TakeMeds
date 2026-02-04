@@ -53,8 +53,9 @@ export function generateLogsForMedication(medicationId) {
     return 0;
   }
 
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const now = new Date();
+  const currentTimeStr = now.toTimeString().slice(0, 5); // "HH:MM"
+  const todayStr = now.toISOString().split('T')[0];
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().split('T')[0];
@@ -66,9 +67,14 @@ export function generateLogsForMedication(medicationId) {
   let logsCreated = 0;
   const times = JSON.parse(med.times);
 
-  // Generate for today if applicable
+  // Generate for today if applicable (only for times that haven't passed)
   if (startDate <= todayStr && (!endDate || endDate >= todayStr)) {
     for (const time of times) {
+      // Skip times that have already passed today
+      if (time < currentTimeStr) {
+        continue;
+      }
+
       const scheduledTime = `${todayStr} ${time}:00`;
 
       const existing = db.prepare(`
@@ -86,7 +92,7 @@ export function generateLogsForMedication(medicationId) {
     }
   }
 
-  // Generate for tomorrow if applicable
+  // Generate for tomorrow if applicable (all times)
   if (startDate <= tomorrowStr && (!endDate || endDate >= tomorrowStr)) {
     for (const time of times) {
       const scheduledTime = `${tomorrowStr} ${time}:00`;
